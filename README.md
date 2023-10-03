@@ -1,8 +1,8 @@
 # SyzTrust
 SyzTrust is an on-device fuzzing project that enable fuzzing Trusted OSes on boards as well as tracking state and code coverage non-invasively.
-<p><a href="https://arxiv.org/abs/2309.14742"><img alt="SyzTrust thumbnail" align="right" width="200" src="https://"></a></p>
+<p><a href="https://arxiv.org/abs/2309.14742"><img alt="SyzTrust thumbnail" align="right" width="200" src="https://github.com/SyzTrust/syztrust/blob/main/Docs/Images/syztrust_thumbnail.png"></a></p>
 
-The idea of this project is to 
+<!---The idea of this project is to ---> 
 
 Our [paper](https://arxiv.org/abs/2309.14742) from Oakland '24 explain the system in more detail.
 
@@ -30,7 +30,8 @@ To be update
 
 # Configuring Board For Fuzzing
 To be update
-![img](https://)
+
+<img src="https://github.com/SyzTrust/syztrust/blob/main/Docs/Images/settings.png"  width="50%" height="30%">
 
 # SyzTrust Workflow
 To be update

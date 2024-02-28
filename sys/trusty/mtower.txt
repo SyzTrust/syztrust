@@ -1,0 +1,296 @@
+## TEE_OpenTASession/TEE_CloseTASession/TEE_InvokeTACommand
+
+# type buffer[DIR] ptr[DIR, array[int8]]   int8 means type of elements
+
+# Extension resources
+resource void_ptr[intptr]
+resource objhandle[void_ptr]
+resource objhandle_ptr[void_ptr]
+resource ophandle[void_ptr]
+resource ophandle_ptr[void_ptr]
+#resource attr[void_ptr]
+#resource attr_ptr[void_ptr]
+resource objinfo_ptr[void_ptr]
+
+# Extension functions
+#TA_GetOphandle(operation ptr[out, TEE_OperationHandle]) ophandle
+TA_GetOphandle(operation ophandle_ptr) ophandle
+#TA_GetOphandlePtr(operation ptr[out, ptr[out, TEE_OperationHandle]]) ophandle_ptr
+TA_GetOphandlePtr(operation ptr[out, int32]) ophandle_ptr
+
+TA_GetObjhandle(object objhandle_ptr) objhandle
+TA_GetObjhandlePtr(object ptr[out, int32]) objhandle_ptr
+#TA_GetAttr(attribute attr_ptr) attr
+#!
+#TA_GetAttrPtr(attribute ptr[out, TEE_Attribute]) attr_ptr
+TA_GetObjinfoPtr(objectInfo ptr[out, ptr[out, TEE_ObjectInfo]]) objinfo_ptr
+
+#type size_t int32
+# Memory management functions
+
+# Memory Management Constant
+define TEE_USER_MEM_HINT_NO_FILL_ZERO 0x00000000
+define TEE_MALLOC_FILL_ZERO 0x80000000
+
+TEE_HINT = TEE_USER_MEM_HINT_NO_FILL_ZERO, TEE_MALLOC_FILL_ZERO
+# resource buf_ptr[intptr]
+
+
+#  the values in the TEE_ObjectInfo struct have constraints; If persistent, xxx; if transient, xxx ;
+TEE_ObjectInfo {
+    # objectType flags[TEE_object_types, int32]
+    objectType int32
+    objectSize int32
+    maxObjectSize int32
+    # objectUsage flags[TEE_USAGE, int32]
+    objectUsage int32
+    dataSize int32
+    dataPosition int32
+    # handleFlags flags[TEE_HandleFlags, int32]
+    handleFlags int32
+}
+
+# Other constants 
+define TEE_STORAGE_PRIVATE                0x00000001
+define TEE_DATA_FLAG_ACCESS_READ          0x00000001
+define TEE_DATA_FLAG_ACCESS_WRITE         0x00000002
+define TEE_DATA_FLAG_ACCESS_WRITE_META    0x00000004
+define TEE_DATA_FLAG_SHARE_READ           0x00000010
+define TEE_DATA_FLAG_SHARE_WRITE          0x00000020
+define TEE_DATA_FLAG_OVERWRITE            0x00000400
+define TEE_DATA_MAX_POSITION              0xFFFFFFFF
+define TEE_OBJECT_ID_MAX_len              64
+define TEE_USAGE_EXTRACTABLE              0x00000001
+define TEE_USAGE_ENCRYPT                  0x00000002
+define TEE_USAGE_DECRYPT                  0x00000004
+define TEE_USAGE_MAC                      0x00000008
+define TEE_USAGE_SIGN                     0x00000010
+define TEE_USAGE_VERIFY                   0x00000020
+define TEE_USAGE_DERIVE                   0x00000040
+define TEE_USAGE_ILLEGAL_VALUE            0x00800000
+define TEE_HANDLE_FLAG_PERSISTENT         0x00010000
+define TEE_HANDLE_FLAG_INITIALIZED        0x00020000
+define TEE_HANDLE_FLAG_KEY_SET            0x00040000
+define TEE_HANDLE_FLAG_EXPECT_TWO_KEYS    0x00080000
+define TEE_OPERATION_CIPHER               1
+define TEE_OPERATION_MAC                  3
+define TEE_OPERATION_AE                   4
+define TEE_OPERATION_DIGEST               5
+define TEE_OPERATION_ASYMMETRIC_CIPHER    6
+define TEE_OPERATION_ASYMMETRIC_SIGNATURE 7
+define TEE_OPERATION_KEY_DERIVATION       8
+define TEE_OPERATION_STATE_INITIAL        0x00000000
+define TEE_OPERATION_STATE_ACTIVE         0x00000001
+#TEE_USAGE = TEE_USAGE_EXTRACTABLE, TEE_USAGE_ENCRYPT, TEE_USAGE_DECRYPT, TEE_USAGE_MAC, TEE_USAGE_SIGN, TEE_USAGE_VERIFY, TEE_USAGE_DERIVE, TEE_USAGE_ILLEGAL_VALUE
+# In specification the usageflag can be a|b ??
+
+# Object Types
+define TEE_TYPE_AES                        0xA0000010
+define TEE_TYPE_DES                        0xA0000011
+define TEE_TYPE_DES3                       0xA0000013
+define TEE_TYPE_HMAC_MD5                   0xA0000001
+define TEE_TYPE_HMAC_SHA1                  0xA0000002
+define TEE_TYPE_HMAC_SHA224                0xA0000003
+define TEE_TYPE_HMAC_SHA256                0xA0000004
+define TEE_TYPE_HMAC_SHA384                0xA0000005
+define TEE_TYPE_HMAC_SHA512                0xA0000006
+define TEE_TYPE_RSA_PUBLIC_KEY             0xA0000030
+define TEE_TYPE_RSA_KEYPAIR                0xA1000030
+define TEE_TYPE_DSA_PUBLIC_KEY             0xA0000031
+define TEE_TYPE_DSA_KEYPAIR                0xA1000031
+define TEE_TYPE_DH_KEYPAIR                 0xA1000032
+define TEE_TYPE_ECDSA_PUBLIC_KEY           0xA0000041
+define TEE_TYPE_ECDSA_KEYPAIR              0xA1000041
+define TEE_TYPE_ECDH_PUBLIC_KEY            0xA0000042
+define TEE_TYPE_ECDH_KEYPAIR               0xA1000042
+define TEE_TYPE_GENERIC_SECRET             0xA0000000
+define TEE_TYPE_CORRUPTED_OBJECT           0xA00000BE
+define TEE_TYPE_DATA                       0xA00000B
+#TEE_Object_Types = TEE_TYPE_AES,TEE_TYPE_DES,TEE_TYPE_DES3,TEE_TYPE_HMAC_MD5,TEE_TYPE_HMAC_SHA1,TEE_TYPE_HMAC_SHA224,TEE_TYPE_HMAC_SHA256,TEE_TYPE_HMAC_SHA384,TEE_TYPE_HMAC_SHA512,TEE_TYPE_RSA_PUBLIC_KEY,TEE_TYPE_RSA_KEYPAIR,TEE_TYPE_DSA_PUBLIC_KEY,TEE_TYPE_DSA_KEYPAIR,TEE_TYPE_DH_KEYPAIR,TEE_TYPE_ECDSA_PUBLIC_KEY,TEE_TYPE_ECDSA_KEYPAIR,TEE_TYPE_ECDH_PUBLIC_KEY,TEE_TYPE_ECDH_KEYPAIR,TEE_TYPE_GENERIC_SECRET,TEE_TYPE_CORRUPTED_OBJECT,TEE_TYPE_DATA
+
+#TEE_HandleFlags = TEE_HANDLE_FLAG_PERSISTENT, TEE_HANDLE_FLAG_INITIALIZED
+
+
+
+# Operation state : INITIAL or ACTIVE
+# uint8_t *buffer; buffer to collect complete blocks
+# buffer_tow_blocks: True if two blocks need to be buffered
+# block_size: Block size of cipher 
+# buffer_offs: Offset in buffer
+# state: Handle to state in TEE Core
+#TEE_OperationHandle{
+#    info ptr[in, TEE_OperationInfo]
+#    key1 ptr[in, TEE_ObjectHandle]
+#    key2 ptr[in, TEE_ObjectHandle]
+#    operationState int32
+#    buffer int8
+#    buffer_two_blocks int32[0:1]
+#    block_size int32 
+#    buffer_offs int32
+#    state int32
+#    ae_tag_len int32
+#}
+
+#TEE_OperationInfo{
+#    algorithm int32
+#    operationClass int32
+#    mode int32
+#    digestlength int32
+#    maxKeySize int32
+#    KeySize int32
+#    requiredKeyUsage int32
+#    handleState int32
+#}
+
+TEE_OperationInfoMultiple{
+    algorithm int32
+    operationClass int32
+    mode int32
+    digestlength int32
+    maxKeySize int32
+    handleState int32
+    operationState int32
+    numberOfKeys int32
+    keyInformation array[TEE_OperationInfoKey]
+}
+TEE_OperationInfoKey{
+    keySize int32
+    requiredKeyUsage int32
+}
+
+type TEE_ObjectType int32
+## Transient Object Functions
+
+
+define TEE_ATTR_BIT_VALUE 0x20000000
+# mTower only supports this attribute
+bit_value_flags = TEE_ATTR_BIT_VALUE 
+TEE_Attribute{
+    attributeID flags[bit_value_flags, int32]
+    content TEE_Atribute_Union
+}
+TEE_Atribute_Union [
+    ref struct_ref
+    value struct_value
+]
+struct_ref{
+    buf buffer[inout]
+    length int32
+}
+struct_value{
+    a int32
+    b int32
+}
+
+#[FUNCTIONS]
+# ???     (disabled)
+TEE_Malloc(size int32, hint flags[TEE_HINT]) void_ptr
+
+# changed the size of the memory object pointed to by buffer     (disabled)
+TEE_Realloc(buf buffer[inout], newSize int32)
+TEE_Free(buf buffer[in])
+# copy bytes from the buffer pointed to by src into the buffer pointed to by dest     (disabled)
+TEE_MemMove(buf_dest buffer[inout], buf_src buffer[in], size int32)   
+# return 0, <0, >0, compare the first size bytes of the buffer pointed to by buffer1 to the first size bytes pointed by buffer2     (disabled)
+TEE_MemCompare(buffer1 buffer[inout], buffer2 buffer[inout], size int32)    
+# writes the byte x into the first size bytes of the buffer pointed to by buffer     (disabled)
+TEE_MemFill(buffer buffer[inout], x int8, size int32)   
+
+# Trusted Storage API for Data and Keys     (disabled)
+## Generic Object Functions  TEE_ObjectHandle: handle on a cryptographic(key, )     (disabled)
+
+# deprecated function     (disabled)
+TEE_GetObjectInfo(object objhandle, objectInfo objinfo_ptr)   
+# This function returns the characteristics of an object; TEE_ObjectHandle Cryptographic object handler     (disabled)
+TEE_GetObjectInfo1(object objhandle, objectInfo objinfo_ptr)
+
+# object types and keysizes have connection     (disabled)
+# TEE_AllocateTransientObject allocates an uninitialized transient object, i.e., a container for attributes. used to hold key or key pair
+TEE_AllocateTransientObject(objectType TEE_ObjectType, maxObjectSize int32, object objhandle_ptr)
+TEE_FreeTransientObject(object objhandle)
+TEE_ResetTransientObject(object objhandle)
+TEE_PopulateTransientObject(object objhandle, attrs ptr[in, intptr], attrCount int32)
+
+# related utee_ not completely implemented     (disabled)
+# TEE_RestrictObjectUsage(object ptr[inout,TEE_ObjectHandle], objectUsage flags[TEE_USAGE])     (disabled)
+
+# related utee_ not completely implemented     (disabled)
+# TEE_RestrictObjectUsage1(object ptr[inout,TEE_ObjectHandle], objectUsage flags[TEE_USAGE])     (disabled)
+# TEE_GetObjectBufferAttribute(object ptr[inout,TEE_ObjectHandle], attributeID flags[bit_value_flags], buf buffer[inout])  (disabled)
+# TEE_GetObjectValueAttribute(object ptr[inout,TEE_ObjectHandle], attributeID flags[bit_value_flags], a int32, b int32)  (disabled)
+
+# TEE_GetOperationInfoMultiple returns information about an operation handle.
+TEE_GetOperationInfoMultiple(operation ophandle, operationInfoMultiple ptr[out, TEE_OperationInfoMultiple], operationSize int32)
+TEE_CloseObject(object objhandle)
+
+
+TEE_InitRefAttribute(attrs ptr[in, intptr], attributeID flags[bit_value_flags], buf buffer[inout], length int32)
+TEE_InitValueAttribute(attrs ptr[in, intptr], attributeID flags[bit_value_flags], a int32, b int32)
+
+# deprecated     (disabled)
+TEE_CopyObjectAttributes(destObject objhandle, srcObject objhandle)   
+TEE_CopyObjectAttributes1(destObject objhandle, srcObject objhandle)
+
+## Persistent Object Functions  (related utee_ not completely implemented)     (disabled)
+#TEE_OpenPersistentObject(storageID int32, objectID buffer[in], objectIDlen int32, object ptr[out, TEE_ObjectHandle])  (disabled)
+# flags can be update     (disabled)
+#TEE_CreatePersistentObject(storageID int32, objectID buffer[in], flags int32, attributes objhandle, initialData buffer[in], initialDatalen int32, objectIDlen int32, object ptr[out, TEE_ObjectHandle])  (disabled)
+#TEE_CloseAndDeletePersistentObject(object objhandle)     (disabled)
+#TEE_RenamePersistentObject(object objhandle, newObjectID buffer[in], newObjecyIDlen int32)     (disabled)
+
+
+#resource TEE_ObjectEnumHandle[int32]     (disabled)
+## Persistent Object Enumeration Functions (# related utee_ not completely implemented)     (disabled)
+#TEE_AllocatePersistentObjectEnumerator(objectEnumerator ptr[out, TEE_ObjectEnumHandle])     (disabled)
+#TEE_FreePersistentObjectEnumerator(objectEnumerator ptr[in, TEE_ObjectEnumHandle])
+#TEE_ResetPersistentObjectEnumerator(objectEnumerator ptr[in, TEE_ObjectEnumHandle])     (disabled)
+#TEE_StartPersistentObjectEnumerator(objectEnumerator ptr[in, TEE_ObjectEnumHandle], storageID int32)     (disabled)
+#TEE_GetNextPersistentObject(objectEnumerator ptr[in, TEE_ObjectEnumHandle], objectInfo ptr[out, TEE_ObjectInfo], objectID buffer[out], objectIDlen ptr[in, int32])     (disabled)
+
+## Data Stream Access Functions (# related utee_ not completely implemented)     (disabled)
+#type TEE_Whence int32     (disabled)
+#TEE_ReadObjectData(object objhandle, buffer buffer[out], size int32, count ptr[out, int32])  (disabled)
+#TEE_WriteObjectData(object objhandle, buffer buffer[inout], size int32)   (disabled)
+#TEE_TruncateObjectData(object objhandle, size int32)      (disabled)
+#TEE_SeekObjectData(object objhandle, offset int32, whence ptr[in, TEE_Whence])     (disabled)
+
+
+# Cryptographic Operations API     (disabled)
+## Generic Operation Functions     (disabled)
+TEE_AllocateOperation(operation ophandle_ptr, algorithm int32, mode int32, maxKeySize int32)
+TEE_FreeOperation(operation ophandle)
+TEE_CopyOperation(dstoperation ophandle, srcoperation ophandle)      (disabled)
+TEE_ResetOperation(operation ophandle)
+TEE_SetOperationKey(operation ophandle, key objhandle)
+TEE_SetOperationKey2(operation ophandle, key1 objhandle, key2 objhandle)
+
+## Message Digest Functions     (disabled)
+TEE_DigestUpdate(operation ophandle, chunk buffer[in], chunkSize int32)
+TEE_DigestDoFinal(operation ophandle, chunk buffer[in], chunklen int32, hash buffer[out], hashlen ptr[in, int32])
+TEE_DigestExtract(operation ophandle, hash buffer[out], hashlen ptr[in, int32])      (disabled)
+
+## Symmetric Cipher Functions     (disabled)
+TEE_CipherInit(operation ophandle, IV buffer[in], IVlen int32)
+TEE_CipherUpdate(operation ophandle, srcdata buffer[in], srclen int32, destdata buffer[out], destlen ptr[in, int32])
+TEE_CipherDoFinal(operation ophandle, srcdata buffer[in], srclen int32, destdata buffer[out], destlen ptr[in, int32])   (disabled)
+
+## MAC Functions     (disabled)
+TEE_MACInit(operation ophandle, IV buffer[in], IVlen int32)   
+TEE_MACUpdate(operation ophandle, chunk buffer[in], chunkSize int32)   
+TEE_MACComputeFinal(operation ophandle, message buffer[in], messagelen int32, mac buffer[out], maclen ptr[in, int32])   
+TEE_MACCompareFinal(operation ophandle, message buffer[in], messagelen int32, mac buffer[in], maclen int32)   
+
+## Authenticated Encryption Functions     (disabled)
+TEE_AEInit(operation ophandle, nonce buffer[in], noncelen int32, taglen int32, aadlen int32, payloadlen int32)      (disabled)
+TEE_AEUpdateAAD(operation ophandle, aaddata buffer[in], adddatalen int32)    
+TEE_AEUpdate(operation ophandle, srcdata buffer[in], srclen int32, destData buffer[out], destlen ptr[in, int32])   
+TEE_AEEncryptFinal(operation ophandle, srcdata buffer[in], srclen int32, destData buffer[out], destlen ptr[out, int32], tag buffer[out], taglen ptr[in, int32])   
+TEE_AEDecryptFinal(operation ophandle, srcdata buffer[in], srclen int32, destData buffer[out], destlen ptr[out, int32], tag buffer[in], taglen int32)   
+
+TEE_AsymmetricEncrypt(operation ophandle, params ptr[in, TEE_Attribute], paramCount int32, srcdata buffer[in], srclen int32, destData buffer[out], destlen ptr[in, int32])      (disabled)
+TEE_AsymmetricDecrypt(operation ophandle, params ptr[in, TEE_Attribute], paramCount int32, srcdata buffer[in], srclen int32, destData buffer[out], destlen ptr[in, int32])      (disabled)
+TEE_AsymmetricSignDigest(operation ophandle, params ptr[in, TEE_Attribute], paramCount int32, digest buffer[in], digestlen int32, signature buffer[out], signaturelen ptr[in, int32])   (disabled)
+TEE_AsymmetricVerifyDigest(operation ophandle, params ptr[in, TEE_Attribute], paramCount int32, digest buffer[in], digestlen int32, signature buffer[in], signaturelen int32)   (disabled)
+
+TEE_IsAlgorithmSupported(algid int32, element int32)      (disabled)
+TEE_GenerateRandom(randombuffer buffer[out], randombufferlen int32) 

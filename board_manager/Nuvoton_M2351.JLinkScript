@@ -1,0 +1,191 @@
+/***********************************************************************
+*                    SEGGER Microcontroller GmbH                       *
+*                        The Embedded Experts                          *
+************************************************************************
+*                                                                      *
+*                  (c) SEGGER Microcontroller GmbH                     *
+*                        All rights reserved                           *
+*                          www.segger.com                              *
+*                                                                      *
+************************************************************************
+*                                                                      *
+************************************************************************
+*                                                                      *
+*                                                                      *
+*  Licensing terms                                                     *
+*                                                                      *
+* The use in source and binary forms, with or without modification,    *
+* is permitted for internal use only. The redistribution to any        *
+* third party is prohibited.                                           *
+*                                                                      *
+*                                                                      *
+* THIS SOFTWARE IS PROVIDED BY COPYRIGHT HOLDER "AS IS" AND ANY        *
+* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE    *
+* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR   *
+* PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDER BE        *
+* LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,     *
+* OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,             *
+* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR   *
+* PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY  *
+* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT         *
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE    *
+* USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH     *
+* DAMAGE.                                                              *
+*                                                                      *
+************************************************************************
+
+-------------------------- END-OF-HEADER -----------------------------
+
+Purpose: Examplescript to Pin init
+Literature:
+  [1]  J-Link User Guide
+
+Additional information:
+  For more information about public functions that can be implemented in order to customize J-Link actions, please refer to [1]
+*/
+
+/*********************************************************************
+*
+*       OnTraceStart()
+*
+*  Function description
+*    If present, called right before trace is started.
+*    Used to initialize MCU specific trace related things like configuring the trace pins for alternate function.
+*
+*  Return value
+*    >= 0:  O.K.
+*     < 0:  Error
+*
+*  Notes
+*    (1) May use high-level API functions like JLINK_MEM_ etc.
+*    (2) Should not call JLINK_TARGET_Halt(). Can rely on target being halted when entering this function
+*/
+int OnTraceStart(void) {
+  U32 SYS_GPE_MFPH;
+  U32 PE_MODE;
+  U32 PORT_PUSH_OUTPUT_MODE;
+  U32 MODE_MASK;
+  U32 FUNCTION_MASK;   
+  U32 iTCLK;
+  U32 iTD0;
+  U32 iTD1;
+  U32 iTD2;
+  U32 iTD3;
+  U32 v;
+  U32 PortWidth;
+  //
+  //JLINK_ExecCommand("TraceSampleAdjust TD=2000");
+  //
+  // Set Trace Portwidth(Optional): Default 4 Pin Trace, other possibilities: 1, 2, 4
+  //
+  //JLINK_TRACE_PortWidth = 4;
+  //
+  //   PE12 => TCLK
+  //   PE11 => TD0
+  //   PE10 => TD1
+  //   PE9  => TD2
+  //   PE8  => TD3
+  //   alternate mode => MFP 14
+  //
+  // Init register addresses and variables
+  //
+  JLINK_SYS_Report("Start: Initializing trace pins");
+  SYS_GPE_MFPH = 0x40000054;
+  PE_MODE      = 0x10000100;
+  iTCLK = 12;
+  iTD0  = 11;
+  iTD1  = 10;
+  iTD2  = 9;
+  iTD3  = 8;
+  PortWidth = JLINK_TRACE_PortWidth;
+  PORT_PUSH_OUTPUT_MODE = 1;
+  MODE_MASK             = 0x3;
+  FUNCTION_MASK         = 0xF;
+  //
+  // Init pins
+  //
+  //
+  // TCLK init
+  //
+  v  =  JLINK_MEM_ReadU32(SYS_GPE_MFPH);
+  v  &= ~(FUNCTION_MASK << (16));                         // Mask alt func register
+  v  |= (14 << (16));                                     // Set alt function mode
+  JLINK_MEM_WriteU32(SYS_GPE_MFPH, v);
+  v  =  JLINK_MEM_ReadU32(PE_MODE);
+  v  &= ~(MODE_MASK << (2 * iTCLK));                      // Mask output mode
+  v  |= (PORT_PUSH_OUTPUT_MODE  << (2 * iTCLK));          // Set output mode to output push_pull
+  JLINK_MEM_WriteU32(PE_MODE, v);
+  //
+  // TD0 init
+  //
+  v  =  JLINK_MEM_ReadU32(SYS_GPE_MFPH);
+  v  &= ~(FUNCTION_MASK << (12));                         // Mask alt func register
+  v  |= (14 << (12));                                     // Set alt function mode
+  JLINK_MEM_WriteU32(SYS_GPE_MFPH, v);                                                                          
+  v  =  JLINK_MEM_ReadU32(PE_MODE);                       
+  v  &= ~(MODE_MASK << (2 * iTD0));                       // Mask output mode
+  v  |= (PORT_PUSH_OUTPUT_MODE << (2 * iTD0));            // Set output mode to output push_pull
+  JLINK_MEM_WriteU32(PE_MODE, v);
+  //
+  // TD1 init
+  //
+  if (PortWidth > 1) {
+  v  =  JLINK_MEM_ReadU32(SYS_GPE_MFPH);
+  v  &= ~(FUNCTION_MASK << (8));                          // Mask alt func register
+  v  |= (14 << (8));                                      // Set alt function mode
+  JLINK_MEM_WriteU32(SYS_GPE_MFPH, v);
+  v  =  JLINK_MEM_ReadU32(PE_MODE);
+  v  &= ~(MODE_MASK << (2 * iTD1));                       // Mask output mode
+  v  |= (PORT_PUSH_OUTPUT_MODE  << (2 * iTD1));           // Set output mode to output push_pull
+  JLINK_MEM_WriteU32(PE_MODE, v);
+  }
+  //
+  // TD2 & TD3 init
+  //
+  if (PortWidth > 2) {
+      //
+      // TD2 init
+      //
+      v  =  JLINK_MEM_ReadU32(SYS_GPE_MFPH);
+      v  &= ~(FUNCTION_MASK << (4));                      // Mask alt func register
+      v  |= (14 << (4));                                  // Set alt function mode
+      JLINK_MEM_WriteU32(SYS_GPE_MFPH, v);                                                               
+      v  =  JLINK_MEM_ReadU32(PE_MODE);                   
+      v  &= ~(MODE_MASK << (2 * iTD2));                   // Mask output mode
+      v  |= (PORT_PUSH_OUTPUT_MODE << (2 * iTD2));        // Set output mode to output push_pull
+      JLINK_MEM_WriteU32(PE_MODE, v);
+      //
+      // TD3 init
+      //
+      v  =  JLINK_MEM_ReadU32(SYS_GPE_MFPH);
+      v  &= ~(FUNCTION_MASK);                             // Mask alt func register
+      v  |= (14);                                         // Set alt function mode
+      JLINK_MEM_WriteU32(SYS_GPE_MFPH, v);                                                                 
+      v  =  JLINK_MEM_ReadU32(PE_MODE);                   
+      v  &= ~(MODE_MASK << (2 * iTD3));                   // Mask output mode
+      v  |= (PORT_PUSH_OUTPUT_MODE << (2 * iTD3));        // Set output mode to output push_pull
+      JLINK_MEM_WriteU32(PE_MODE, v);
+  }
+  JLINK_SYS_Report("End: Initializing trace pins");
+  return 0;
+}
+/*********************************************************************
+*
+*       ConfigTargetSettings()
+*
+*  Function description
+*    Set Targets config.
+*    
+*
+*  Return value
+*    >= 0:  O.K.
+*     < 0:  Error
+*
+*/
+int ConfigTargetSettings (void) {
+  JLINK_SYS_Report("--SetTPIUBaseAddr--");
+  JLINK_ExecCommand("CORESIGHT_SetTPIUBaseAddr = 0xE0040000;");
+  JLINK_SYS_Report("--SetETMBaseAddr--");
+  JLINK_ExecCommand("CORESIGHT_SetETMBaseAddr  = 0xE0041000");  
+  return 0;
+}

@@ -1,0 +1,30 @@
+int ConfigTargetSettings(void) {
+  //
+  // Mark a specific memory region as memory type illegal
+  // in order to make sure that the software is not allowed to access these regions
+  // 
+  // Note: This does not work for J-Flash tool
+  //
+
+  // Exclude SFLASH regions
+  JLINK_ExecCommand("map region 0x16000000-0x160007FF XI"); // [SFLASH Start - User Data Start]
+  JLINK_ExecCommand("map region 0x16001000-0x160019FF XI"); // [User Data End - NAR Start]
+  JLINK_ExecCommand("map region 0x16001C00-0x160059FF XI"); // [NAR End - Public Key Start]
+  JLINK_ExecCommand("map region 0x16006600-0x16007BFF XI"); // [Public Key End - TOC2 Start]
+
+  // Exclude Cy Metadata
+  JLINK_ExecCommand("map region 0x90300000-0x903FFFFF XI"); // Cy Checksum
+  JLINK_ExecCommand("map region 0x90500000-0x905FFFFF XI"); // Cy Metadata
+}
+
+void InitTarget(void) {
+  Report("********************************************");
+  Report("InitTarget for PSoC6 Cortex-M0+ script");
+  CORESIGHT_AddAP(0, CORESIGHT_AHB_AP);  // SYSAP
+  CORESIGHT_AddAP(1, CORESIGHT_AHB_AP);  // AHB-AP used to connect to M0+ core
+  CORESIGHT_AddAP(2, CORESIGHT_AHB_AP);  // AHB-AP used to connect to M4 core
+  CORESIGHT_IndexAHBAPToUse = 1;
+  CPU=CORTEX_M0;
+  JLINK_ExecCommand("SetETBIsPresent = 1");
+  Report("********************************************");
+}

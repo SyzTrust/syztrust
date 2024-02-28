@@ -1,0 +1,46 @@
+# r1 : &sess->op_handle
+# r2 : &sess->key_handle
+# r3, r6 : &attr
+# r4 : sess->key_handle
+# r5 : sess->op_handle
+
+## alloc_resources
+# r1 : TEE_OperationHandle *
+r1 = TA_GetOphandlePtr(&AUTO)
+TEE_AllocateOperation(r1, 0x10000210, 0x0, 0x80)
+
+# r2 : TEE_ObjectHandle *
+r2 = TA_GetObjhandlePtr(&AUTO)
+TEE_AllocateTransientObject(0xA0000010, 0x80, r2)
+
+# r3 : TEE_Attribute *
+TEE_InitRefAttribute(&AUTO=0x0, 0xC0000000, &AUTO, 0x10)
+
+# r4 : TEE_ObjectHandle
+# or, r4 = TA_GetObjhandle(r2, &AUTO, 0/1) : new op or existing op
+r4 = TA_GetObjhandle(r2)
+TEE_PopulateTransientObject(r4,&AUTO=0x0,0x1)
+
+# r5 : TEE_OperationHandle
+r5 = TA_GetOphandle(r1)
+TEE_SetOperationKey(r5, r4)
+
+## set_aes_key
+TEE_InitRefAttribute(&AUTO=0x0, 0xC0000000, &AUTO='a5a5a5a5a5a5a5a5a5a5', 0x10)
+TEE_ResetTransientObject(r4)
+TEE_PopulateTransientObject(r4, &AUTO=0x0, 0x1)
+TEE_ResetOperation(r5)
+TEE_SetOperationKey(r5, r4)
+
+## reset_aes_iv
+TEE_CipherInit(r5, &AUTO='1234567812345678', 0x10)
+
+## cipher_buffer
+#          should be      | the same  |
+#TEE_CipherUpdate(r5,&AUTO=''/64,0x40,&AUTO=''/64,&AUTO)
+TEE_CipherUpdate(r5,&AUTO='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',0x40,&AUTO=''/64,&AUTO=0x40)
+#TEE_AEUpdate(r5,&AUTO='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',0x40,&AUTO=''/64,&AUTO)
+
+
+## free
+TEE_FreeOperation(r5)

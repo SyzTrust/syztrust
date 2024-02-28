@@ -1,0 +1,14 @@
+---Known issues for Cypress Segger DFP-------
+
+ID:PROGTOOLS-98
+Issue: Segger J-Link Commander and J-Flash Lite tools cannot read and do not write eFuse bits correctly. These tools do not fill in gaps in the hex file with the correct values for eFuse bits, and use a different read technique than the Segger J-Flash tool.
+Workaround: Use the Segger J-Flash tool. To program eFuse bits with J-Link Commander and J-Flash Lite tools, manually edit the hex file so that the eFuse region (0x90700000-0x907003FF) is filled in with data. Fuses, which must not be touched, should be filled with the 0xFF (ignore) value in that hex file.
+
+ID:PROGTOOLS-2274
+Issue: Incorrect behaviour (invalid RAM size, erase operation failures) might be observed in J-Flash tool while using PSoC 64 MCU devices after changing a target device from CM0+ to CM4. It is caused by the fact that J-Flash continues to work via CM0+ core but uses RAM region which is dedicated to CM4 core. No reconnection happens automatically after the changing of core.
+Workaround: Perform a disconnecting before changing the MCU core.
+
+---Known limitations for Cypress Segger DFP-------
+
+ID:None
+The recommended targets (aliases) for PSoC 6 devices in SEGGER tools have '_tm' suffix (for example CY8C6xA_CM0P_tm) and uses Cypress Test Mode connection method. Please use them for programming to avoid potential issues with the device connection by debugger when using SEGGER's default acquisition method (aliases without '_tm' suffix).

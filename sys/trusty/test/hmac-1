@@ -1,0 +1,33 @@
+# r1 : &op_handle
+# r2 : &key_handle
+# r3 : &attr
+# r4 : key_handle
+## hmac_sha1
+# r1 : TEE_OperationHandle *
+r1 = TA_GetOphandlePtr(&AUTO)
+TEE_AllocateOperation(r1, 0x30000002, 0x4, 0xA0)
+
+# r2 : TEE_ObjectHandle *
+r2 = TA_GetObjhandlePtr(&AUTO)
+TEE_AllocateTransientObject(0xA0000002, 0xA0, r2)
+
+# r3 : TEE_Attribute *
+r3 = TA_GetAttrPtr(&AUTO)
+TEE_InitRefAttribute(r3, 0xC0000000, &AUTO='12345678901234567890', 0x14 )
+
+# r4 : TEE_ObjectHandle
+r4 = TA_GetObjhandle(r2)
+TEE_PopulateTransientObject(r4, r3, 0x1)
+
+# r5 : TEE_OperationHandle
+r5 = TA_GetOphandle(r1)
+TEE_SetOperationKey(r5, r4)
+
+TEE_MACInit(r5, 0x0, 0x0)
+TEE_MACUpdate(r5, &AUTO='00000000', 0x8)
+
+TEE_MACComputeFinal(r5, 0, 0, &AUTO=''/20, &AUTO)
+
+TEE_FreeOperation(r5)
+
+TEE_FreeTransientObject(r4)

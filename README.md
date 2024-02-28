@@ -1,20 +1,21 @@
 # SyzTrust
-SyzTrust is an on-device fuzzing project that enable fuzzing Trusted OSes on boards as well as tracking state and code coverage non-invasively.
+SyzTrust is an on-device fuzzing project that enables fuzzing Trusted OSes on boards as well as tracking state and code coverage non-invasively.
+
+SyzTrust is designed for fuzzing Trusted OSes provided by IoT vendors and assumes that (i) a TA can be installed in the
+Trusted OS, and (ii) target devices have ETM enabled.
+
+The idea of this project is to fuzz closed-source, proprietary Trusted OSes on development boards. We decouple execution to offload heavy-weight tasks (e.g., ETM packet decoder, branch and state coverage calculation, seed preservation, seed selection, and mutation) to the PC. Then, we utilize a debug probe to track the instruction traces and state variable values by Real Time Transfer protocol. Based on the instruction traces and state variable values, we can calculate the branch and state coverage, which will be utilized to guide seed preservation and selection in the fuzzing procedure.
+
 <p><a href="https://www.computer.org/csdl/proceedings-article/sp/2024/313000a070/1RjEaG9OpTa"><img alt="SyzTrust thumbnail" align="right" width="200" src="https://github.com/SyzTrust/syztrust/blob/main/Docs/Images/syztrust_thumbnail.png"></a></p>
 
 <!---The idea of this project is to ---> 
 
-Our [paper](https://www.computer.org/csdl/proceedings-article/sp/2024/313000a070/1RjEaG9OpTa) from Oakland '24 explain the system in more detail.
+Our [paper](https://www.computer.org/csdl/proceedings-article/sp/2024/313000a070/1RjEaG9OpTa) from Oakland '24 explains the system in more detail.
 
 
-## Repo Organization and Documents
-To be updated
 
-## The Idea
-To be updated
-
-## SyzTrust Components
-To be updated
+## SyzTrust Components from Implementation Perspective
+SyzTrust is built on Syzkaller. We added a board controller to control a debug probe for instruction trace collection and state variable monitoring. We replace the original executor in Syzkaller with our designed CA and TA. Moreover, we implemented our designed corpus, seed preservation and seed selection components.
 
 # Installation
 
@@ -157,16 +158,12 @@ protector_end_addr   = 0x20001368
     For Linux (To be updated).
 
 
-## SyzTrust in Docker
-To be updated
-
-
-# SyzTrust Workflow
-To be updated
 
 
 # Bug Analysis
 To be updated
+
+
 
 
 # Citing the Paper

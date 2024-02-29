@@ -309,7 +309,20 @@ class RTThreading(threading.Thread):
                 if payload_log and __name__ != '__main__':
                     self.payload_log_file.close()
                     self.payload_log_file = None
-            
+            elif self.attr == 'debug':
+                while RTThreading.conti:
+                    x = input('Command:')
+                    try:
+                        if len(x) <1:
+                            continue
+                        elif x.startswith('check'):
+                            command = x.split()
+                            if command[1].upper().startswith('ADDRESS'):
+                                controller.WriteMemU32(payload_size_addr,0xbadef00d)
+                    except KeyboardInterrupt:
+                        print('keyboard ctrl+c.')
+                    except Exception as e:
+                        traceback.print_exc()
         except Exception as e:
             RTThreading.conti = False
             traceback.print_exc()
